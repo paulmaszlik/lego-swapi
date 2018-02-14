@@ -2,10 +2,18 @@
   text-align: center;
 }
 
-.App-title {
-  font-size: 1.5em;
+.ErrorBar {
+  background: #FF5252;
+  color: white;
+  padding: 10px;
+  width: 100%;
 }
 
-.App-intro {
-  font-size: large;
+.ErrorBar--title {
+  margin: 0px 0px 10px 0px;
+}
+
+.ErrorBar--closeButton {
+  display: block;
+  margin: 10px 0px 0px 0px;
 }

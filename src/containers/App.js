@@ -2,6 +2,9 @@ import _ from 'underscore';
 import axios from 'axios'
 import React, { Component } from 'react';
 
+import ErrorBar from '../components/ErrorBar';
+import SearchResult from '../components/SearchResult';
+
 import '../css/App.css';
 
 class App extends Component {
@@ -10,13 +13,15 @@ class App extends Component {
 
     this.handleSearchInputChange = this.handleSearchInputChange.bind(this);
     this.handleCloseErrorMsg = this.handleCloseErrorMsg.bind(this);
+    this.handleSelectCharacter = this.handleSelectCharacter.bind(this);
     this.getResults = _.debounce(this.getResults, 250); 
 
     this.state = {
-      appError: undefined,
-      searchValue: '',
+      appError: '',
       loading: false,
-      result: undefined
+      searchValue: '',
+      searchResult: undefined,
+      selectedCharacter: undefined
     }
   }
 
@@ -34,7 +39,7 @@ class App extends Component {
       if (res.config && res.config.params && res.config.params.search === this.state.searchValue) {
         this.setState({
           loading: false,
-          result: res.data
+          searchResult: res.data
         });
       }
     }
@@ -51,10 +56,11 @@ class App extends Component {
   handleSearchInputChange(e) {
     let val = e.target.value.trim();
 
-    this.setState({
+    this.setState(prevState => ({
       searchValue: val,
-      loading: val.length > 0
-    });
+      loading: val.length > 0,
+      searchResult: val.length === 0 ? undefined : prevState.searchResult
+    }));
 
     this.getResults();
   }
@@ -65,31 +71,23 @@ class App extends Component {
     })
   }
 
+  handleSelectCharacter(nameOfCharacter) {
+    let character = this.state.searchResult.results.filter(res => {
+      return res.name === nameOfCharacter;
+    });
+
+    this.setState({
+      selectedCharacter: character[0]
+    });
+  }
+
   render() {
     return (
       <div className="App">
-        {this.state.appError && (
-          <div>
-            {this.state.appError}
-            <a onClick={this.handleCloseErrorMsg}>Close this message</a>
-          </div>
-        )}
+        <ErrorBar errorMessage={this.state.appError} handleCloseErrorMsg={this.handleCloseErrorMsg} />
         <h1>Star Wars Character Database</h1>
         <input type="text" value={this.state.searchValue} onChange={this.handleSearchInputChange} placeholder="Start typing a name of SW character..."/>
-        {this.state.loading && (
-          <p>Loading</p>
-        )}
-
-        {!this.state.loading && this.state.searchValue && this.state.result && (
-          <div>
-            <p>
-              {this.state.result.count} character found.
-            </p>
-            {this.state.result.results.map(oneResult => (
-              <p key={oneResult.name}>{oneResult.name}</p>
-            ))}
-          </div>
-        )}
+        <SearchResult loading={this.state.loading} searchResult={this.state.searchResult} handleSelectCharacter={this.handleSelectCharacter} />
       </div>
     );
   }
