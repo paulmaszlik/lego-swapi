@@ -2,10 +2,12 @@ import _ from 'underscore';
 import axios from 'axios'
 import React, { Component } from 'react';
 
+import CharacterInfoPage from '../components/CharacterInfoPage';
 import ErrorBar from '../components/ErrorBar';
 import SearchResult from '../components/SearchResult';
 
 import '../css/App.css';
+import '../css/simple-grid.css';
 
 class App extends Component {
   constructor(props) {
@@ -77,17 +79,26 @@ class App extends Component {
     });
 
     this.setState({
-      selectedCharacter: character[0]
+      searchValue: nameOfCharacter,
+      selectedCharacter: character[0],
+      searchResult: undefined
     });
   }
 
   render() {
     return (
-      <div className="App">
-        <ErrorBar errorMessage={this.state.appError} handleCloseErrorMsg={this.handleCloseErrorMsg} />
-        <h1>Star Wars Character Database</h1>
-        <input type="text" value={this.state.searchValue} onChange={this.handleSearchInputChange} placeholder="Start typing a name of SW character..."/>
-        <SearchResult loading={this.state.loading} searchResult={this.state.searchResult} handleSelectCharacter={this.handleSelectCharacter} />
+      <div className="App container">
+        <div className="row">
+          <div className="col-12">
+            <ErrorBar errorMessage={this.state.appError} handleCloseErrorMsg={this.handleCloseErrorMsg} />
+            <h1>Star Wars Character Database</h1>
+            <input type="text" className="searchInput" value={this.state.searchValue} onChange={this.handleSearchInputChange} placeholder="Start typing a name of SW character..."/>
+            <SearchResult loading={this.state.loading} searchResult={this.state.searchResult} handleSelectCharacter={this.handleSelectCharacter} />
+            {this.state.selectedCharacter && (
+              <CharacterInfoPage character={this.state.selectedCharacter}/>
+            )} 
+          </div>
+        </div>
       </div>
     );
   }
