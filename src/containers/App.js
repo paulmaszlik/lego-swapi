@@ -13,7 +13,7 @@ class App extends Component {
   constructor(props) {
     super(props);
 
-    this.getResultsForSearchValue = _.debounce(this.getResultsForSearchValue, 250); 
+    this.getResultsForSearchValue = _.debounce(this.getResultsForSearchValue, 250).bind(this); 
     this.handleCloseErrorMsg = this.handleCloseErrorMsg.bind(this);
     this.handleSearchInputChange = this.handleSearchInputChange.bind(this);
     this.handleSelectCharacter = this.handleSelectCharacter.bind(this);
@@ -21,6 +21,7 @@ class App extends Component {
     
     this.state = {
       appError: '',
+      lastRequestedUrl: undefined,
       loading: false,
       searchValue: '',
       searchResult: undefined,
@@ -35,9 +36,7 @@ class App extends Component {
     }
   }
 
-  getResultsForSearchValue() {
-    if (!this.state.searchValue) return;
-
+  getResultsForSearchValue(url = `https://swapi.co/api/people/?search=${this.state.searchValue}`) {
     const handleResponse = (err, res) => {
       if (err) {
         return this.setState(prevState => ({
@@ -45,10 +44,8 @@ class App extends Component {
         }));
       }
 
-      console.log(res.data);
-
-      // update the results only if params equals with input (for latest result)
-      if (res.config && res.config.params && res.config.params.search === this.state.searchValue) {
+      // update the results only if requested url is the last requested url
+      if (res.config && res.config.url === this.state.lastRequestedUrl) {
         this.setState({
           loading: false,
           searchResult: res.data
@@ -56,11 +53,12 @@ class App extends Component {
       }
     }
 
-    axios.get('https://swapi.co/api/people/?search=', {
-      params: {
-        search: this.state.searchValue
-      }
+    this.setState({
+      loading: true,
+      lastRequestedUrl: url
     })
+    
+    axios.get(url)
     .then(res => handleResponse(null, res))
     .catch(res => handleResponse(res))
   }
@@ -76,11 +74,12 @@ class App extends Component {
 
     this.setState(prevState => ({
       searchValue: val,
-      loading: val.length > 0,
       searchResult: val.length === 0 ? undefined : prevState.searchResult
     }));
 
-    this.getResultsForSearchValue();
+    if (val.length > 0) {
+      this.getResultsForSearchValue();
+    }
   }
 
   handleSelectCharacter(nameOfCharacter) {
@@ -127,14 +126,15 @@ class App extends Component {
              type="text" 
              className="searchInput" 
              value={this.state.searchValue} 
-             onChange={this.handleSearchInputChange} placeholder="Start typing a name..."
+             onChange={this.handleSearchInputChange} placeholder="Start typing a name... Who is your favourite?"
              ref={(input) => { this.searchInput = input; }} 
             />
 
             <SearchResult 
+             getResultsForSearchValue={this.getResultsForSearchValue}
+             handleSelectCharacter={this.handleSelectCharacter}
              loading={this.state.loading} 
              searchResult={this.state.searchResult} 
-             handleSelectCharacter={this.handleSelectCharacter}
             />
 
             {this.state.selectedCharacter && (

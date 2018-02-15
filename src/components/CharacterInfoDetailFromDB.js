@@ -16,6 +16,7 @@ export default class CharacterInfoDetailFromDB extends React.Component {
   }
 
   componentWillReceiveProps(nextProps) {
+    // if the props are the same don't update info
     if (this.props.url === nextProps.url) return;
 
     this.setState({
@@ -25,6 +26,8 @@ export default class CharacterInfoDetailFromDB extends React.Component {
     this.getDetail(nextProps.url, nextProps.swDB, nextProps.dataType)
   }
 
+  // getDetials resolve an url by type for character info page
+  // once resolve an url, store it in app's state - get value from there next time
   getDetail(url, swDB, dataType) {
     if (!url) {
       return this.setState({
@@ -32,16 +35,18 @@ export default class CharacterInfoDetailFromDB extends React.Component {
       });
     }
 
+    // let search the value in local state
     let resultFromLocalswDB = _.findWhere(swDB[dataType], {"url": url});
     let parameterName = dataType === 'films' ? 'title' : 'name';
 
+    // if we found it, set it and return from this function
     if (resultFromLocalswDB) {
       return this.setState({
         value: resultFromLocalswDB[parameterName]
       });
     }
 
-    // if there is no cache value for this url -> get it from swapi
+    // if there is no local state value for this url -> get it from swapi
     axios.get(url).then(response => {
       // save it to app's state
       this.props.swDBupdate(dataType, response.data);

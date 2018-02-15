@@ -80,6 +80,23 @@
   background: #af090a;
 }
 
+.SearchResult--pageButton {
+  color: #222;
+  cursor: pointer;
+  background-color: #fed000;
+  padding: 3px 6px;
+  margin: 3px;
+  -webkit-transition: background-color .2s ease-out;
+  -moz-transition: background-color .2s ease-out;
+  -o-transition: background-color .2s ease-out;
+  transition: background-color .2s ease-out;
+}
+
+.SearchResult--pageButton:hover {
+  background-color: #f5a904;
+  padding: 3px 6px;
+}
+
 .searchInput {
   border: 0px;
   color: black;

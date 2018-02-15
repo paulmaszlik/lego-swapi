@@ -1,7 +1,12 @@
 import React from 'react';
 
 const numberOfResults = (count) => 
-  (`${count} characther${count>1?`s`:``} found. ${count>10?`(shown only first 10)`:``}`);
+(
+  <div>
+    {count} characther{count>1?`s`:``} found.
+    {count>10?(<small>(show 10 results/page)</small>):undefined}
+  </div>
+);
 
 const SearchResult = props => {
   return (
@@ -15,6 +20,7 @@ const SearchResult = props => {
           <p>
             {numberOfResults(props.searchResult.count)}
           </p>
+
           {props.searchResult.results.map(oneResult => (
             <div 
              className="SearchResult--oneResult" 
@@ -22,6 +28,24 @@ const SearchResult = props => {
              onClick={() => props.handleSelectCharacter(oneResult.name)}>{oneResult.name}
             </div>
           ))}
+
+          {props.searchResult.previous && (
+            <a 
+             onClick={() => {props.getResultsForSearchValue(props.searchResult.previous)}}
+             className="SearchResult--pageButton" 
+            >
+              Previous page
+            </a>
+          )}
+
+          {props.searchResult.next && (
+            <a 
+             onClick={() => {props.getResultsForSearchValue(props.searchResult.next)}}
+             className="SearchResult--pageButton" 
+            >
+              Next page
+            </a>
+          )}
         </div>
       )}
     </div>
