@@ -13,21 +13,29 @@ class App extends Component {
   constructor(props) {
     super(props);
 
-    this.handleSearchInputChange = this.handleSearchInputChange.bind(this);
+    this.getResultsForSearchValue = _.debounce(this.getResultsForSearchValue, 250); 
     this.handleCloseErrorMsg = this.handleCloseErrorMsg.bind(this);
+    this.handleSearchInputChange = this.handleSearchInputChange.bind(this);
     this.handleSelectCharacter = this.handleSelectCharacter.bind(this);
-    this.getResults = _.debounce(this.getResults, 250); 
-
+    this.swDBupdate = this.swDBupdate.bind(this);
+    
     this.state = {
       appError: '',
       loading: false,
       searchValue: '',
       searchResult: undefined,
-      selectedCharacter: undefined
+      selectedCharacter: undefined,
+      swDB: {
+        vehicles: [],
+        starships: [],
+        species: [],
+        planets: [],
+        films: []
+      }
     }
   }
 
-  getResults() {
+  getResultsForSearchValue() {
     if (!this.state.searchValue) return;
 
     const handleResponse = (err, res) => {
@@ -37,7 +45,9 @@ class App extends Component {
         }));
       }
 
-      // update the results only if params uquals with input (for latest result)
+      console.log(res.data);
+
+      // update the results only if params equals with input (for latest result)
       if (res.config && res.config.params && res.config.params.search === this.state.searchValue) {
         this.setState({
           loading: false,
@@ -54,6 +64,12 @@ class App extends Component {
     .then(res => handleResponse(null, res))
     .catch(res => handleResponse(res))
   }
+  
+  handleCloseErrorMsg() {
+    this.setState({
+      appError: undefined
+    })
+  }
 
   handleSearchInputChange(e) {
     let val = e.target.value.trim();
@@ -64,38 +80,65 @@ class App extends Component {
       searchResult: val.length === 0 ? undefined : prevState.searchResult
     }));
 
-    this.getResults();
-  }
-
-  handleCloseErrorMsg() {
-    this.setState({
-      appError: undefined
-    })
+    this.getResultsForSearchValue();
   }
 
   handleSelectCharacter(nameOfCharacter) {
+    // get selected character data from search result list
     let character = this.state.searchResult.results.filter(res => {
       return res.name === nameOfCharacter;
+    })[0];
+    
+    this.setState({
+      searchValue: '',
+      selectedCharacter: character,
+      searchResult: undefined
     });
 
-    this.setState({
-      searchValue: nameOfCharacter,
-      selectedCharacter: character[0],
-      searchResult: undefined
+    // set focus back to input field
+    this.searchInput.focus();
+  }
+
+  swDBupdate(dataType, data) {
+    this.setState(prevState => {
+      let newState = {
+        swDB: {
+          ...prevState.swDB
+        }
+      }
+
+      // add new data to local state db
+      newState.swDB[dataType] = [...newState.swDB[dataType], data];
+      
+      return newState;
     });
   }
 
   render() {
     return (
       <div className="App container">
+        <ErrorBar errorMessage={this.state.appError} handleCloseErrorMsg={this.handleCloseErrorMsg} />
         <div className="row">
           <div className="col-12">
-            <ErrorBar errorMessage={this.state.appError} handleCloseErrorMsg={this.handleCloseErrorMsg} />
             <h1>Star Wars Character Database</h1>
-            <input type="text" className="searchInput" value={this.state.searchValue} onChange={this.handleSearchInputChange} placeholder="Start typing a name of SW character..."/>
-            <SearchResult loading={this.state.loading} searchResult={this.state.searchResult} handleSelectCharacter={this.handleSelectCharacter} />
+
+            <input 
+             autoFocus 
+             type="text" 
+             className="searchInput" 
+             value={this.state.searchValue} 
+             onChange={this.handleSearchInputChange} placeholder="Start typing a name..."
+             ref={(input) => { this.searchInput = input; }} 
+            />
+
+            <SearchResult 
+             loading={this.state.loading} 
+             searchResult={this.state.searchResult} 
+             handleSelectCharacter={this.handleSelectCharacter}
+            />
+
             {this.state.selectedCharacter && (
-              <CharacterInfoPage character={this.state.selectedCharacter}/>
+              <CharacterInfoPage character={this.state.selectedCharacter} swDB={this.state.swDB} swDBupdate={this.swDBupdate}/>
             )} 
           </div>
         </div>
